@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alvis.exam.repository.KnowledgeMapper">
+    <resultMap id="BaseResultMap" type="com.alvis.exam.domain.Knowledge">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="knowledge_id" jdbcType="VARCHAR" property="knowledgeId" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="study_stage_id" jdbcType="VARCHAR" property="studyStageId" />
+        <result column="subject_type_id" jdbcType="VARCHAR" property="subjectTypeId" />
+        <result column="parent_id" jdbcType="VARCHAR" property="parentId" />
+    </resultMap>
+    <sql id="Base_Column_List">
+    id, knowledge_id, name, study_stage_id, subject_type_id, parent_id
+  </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from t_knowledge
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+
+    <!--使用递归的方法遍历查询所有父节点-->
+    <select id="selectList" parameterType="com.alvis.exam.viewmodel.admin.textbook.TextBookPageRequestVM" resultMap="BaseResultMap">
+        SELECT
+        id,knowledge_id,name,study_stage_id, subject_type_id,parent_id
+        FROM t_knowledge
+        <where>
+            and parent_id is NULL
+            <if test="subjectTypeId != null ">
+                and subject_type_id= #{subjectTypeId}
+            </if>
+            <if test="studyStageId != null ">
+                and study_stage_id= #{studyStageId}
+            </if>
+        </where>
+    </select>
+
+    <!--使用递归的方法遍历查询子集-->
+    <select id="findChildren" parameterType="com.alvis.exam.domain.Chapter" resultMap="BaseResultMap">
+        select knowledge_id,name,parent_id
+        from t_knowledge
+        <where>
+            and parent_id = #{knowledgeId}
+        </where>
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_knowledge
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+
+    <!--删除,根据它的knowledge_id批量删除-->
+    <delete id="deleteByIds" parameterType="java.lang.Object">
+        DELETE FROM t_knowledge WHERE `knowledge_id` in
+        <foreach close=")" collection="list" index="index" item="deleteIds" open="(" separator=",">
+            #{deleteIds}
+        </foreach>
+    </delete>
+
+    <insert id="insert" parameterType="com.alvis.exam.domain.Knowledge">
+        insert into t_knowledge (id, knowledge_id, name,
+        study_stage_id, subject_type_id, parent_id
+        )
+        values (#{id,jdbcType=INTEGER}, #{knowledgeId,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR},
+        #{studyStageId,jdbcType=VARCHAR}, #{subjectTypeId,jdbcType=VARCHAR}, #{parentId,jdbcType=VARCHAR}
+        )
+    </insert>
+    <insert id="insertSelective" parameterType="com.alvis.exam.domain.Knowledge">
+        insert into t_knowledge
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="knowledgeId != null">
+                knowledge_id,
+            </if>
+            <if test="name != null">
+                name,
+            </if>
+            <if test="studyStageId != null">
+                study_stage_id,
+            </if>
+            <if test="subjectTypeId != null">
+                subject_type_id,
+            </if>
+            <if test="parentId != null">
+                parent_id,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="knowledgeId != null">
+                #{knowledgeId,jdbcType=VARCHAR},
+            </if>
+            <if test="name != null">
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="studyStageId != null">
+                #{studyStageId,jdbcType=VARCHAR},
+            </if>
+            <if test="subjectTypeId != null">
+                #{subjectTypeId,jdbcType=VARCHAR},
+            </if>
+            <if test="parentId != null">
+                #{parentId,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <!--添加知识点列表-->
+    <insert id="insertKnowledge" keyProperty="id" parameterType="com.alvis.exam.domain.Knowledge" useGeneratedKeys="true">
+        insert into t_knowledge (knowledge_id, name, study_stage_id,subject_type_id, parent_id)
+        values (#{knowledgeId,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{studyStageId,jdbcType=VARCHAR},
+        #{subjectTypeId,jdbcType=VARCHAR}, #{parentId,jdbcType=VARCHAR})
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.alvis.exam.domain.Knowledge">
+        update t_knowledge
+        <set>
+            <if test="knowledgeId != null">
+                knowledge_id = #{knowledgeId,jdbcType=VARCHAR},
+            </if>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="studyStageId != null">
+                study_stage_id = #{studyStageId,jdbcType=VARCHAR},
+            </if>
+            <if test="subjectTypeId != null">
+                subject_type_id = #{subjectTypeId,jdbcType=VARCHAR},
+            </if>
+            <if test="parentId != null">
+                parent_id = #{parentId,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.alvis.exam.domain.Knowledge">
+        update t_knowledge
+        set knowledge_id = #{knowledgeId,jdbcType=VARCHAR},
+        name = #{name,jdbcType=VARCHAR},
+        study_stage_id = #{studyStageId,jdbcType=VARCHAR},
+        subject_type_id = #{subjectTypeId,jdbcType=VARCHAR},
+        parent_id = #{parentId,jdbcType=VARCHAR}
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <!--修改知识点列表-->
+    <update id="updateKnowledge" parameterType="com.alvis.exam.domain.Knowledge">
+        update t_knowledge
+        set name = #{name,jdbcType=VARCHAR}
+        where knowledge_id = #{knowledgeId,jdbcType=VARCHAR}
+    </update>
+
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alvis.exam.repository.ChapterTypeMapper">
+    <resultMap id="BaseResultMap" type="com.alvis.exam.domain.ChapterType">
+        <id column="type_id" jdbcType="INTEGER" property="typeId"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="type" jdbcType="INTEGER" property="type"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    type_id, name,type
+  </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_chapter_type
+        where type_id = #{typeId,jdbcType=INTEGER}
+    </select>
+    <!--查询所有章节类型-->
+    <select id="selectChapterTypeList" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_chapter_type
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_chapter_type
+    where type_id = #{id,jdbcType=INTEGER}
+  </delete>
+    <insert id="insert" parameterType="com.alvis.exam.domain.ChapterType">
+    insert into t_chapter_type (type_id, name)
+    values (#{typeId,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR})
+  </insert>
+    <insert id="insertSelective" parameterType="com.alvis.exam.domain.ChapterType">
+        insert into t_chapter_type
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                type_id,
+            </if>
+            <if test="name != null">
+                name,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{typeId,jdbcType=INTEGER},
+            </if>
+            <if test="name != null">
+                #{name,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.alvis.exam.domain.ChapterType">
+        update t_chapter_type
+        <set>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where type_id = #{typeId,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.alvis.exam.domain.ChapterType">
+    update t_chapter_type
+    set name = #{name,jdbcType=VARCHAR}
+    where type_id = #{typeId,jdbcType=INTEGER}
+  </update>
+</mapper>

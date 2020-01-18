@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alvis.exam.repository.SubjectTypeMapper">
+    <resultMap id="BaseResultMap" type="com.alvis.exam.domain.SubjectType">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="subject_type_id" jdbcType="VARCHAR" property="subjectTypeId"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="study_stage_id" jdbcType="VARCHAR" property="studyStageId"/>
+        <result column="deleted" jdbcType="BIT" property="deleted"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    id,subject_type_id, name,study_stage_id,deleted
+  </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_subject_type
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+
+    <!--学段id查询学科-->
+    <select id="allSubjectStudyStageId" resultMap="BaseResultMap" parameterType="com.alvis.exam.viewmodel.admin.textbook.TextBookPageRequestVM">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM t_subject_type
+        <where>
+            <if test="studyStageId != null ">
+                and study_stage_id = #{studyStageId,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </select>
+
+    <!--学科uuid查询-->
+    <select id="selectSubjectTypeById" resultType="com.alvis.exam.domain.SubjectType" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_subject_type
+        where subject_type_id = #{subjectTypeId,jdbcType=VARCHAR}
+    </select>
+
+    <!--使用学段id并联查询学科,不要忘记映射呀-->
+    <select id="allSubjectType" resultMap="BaseResultMap" resultType="com.alvis.exam.domain.SubjectType">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM t_subject_type
+        <where>
+            <if test="studyStageId != null ">
+                and study_stage_id = #{studyStageId,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_subject_type
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+    <!--添加学段-->
+    <insert id="insert" parameterType="com.alvis.exam.domain.SubjectType">
+    insert into t_subject_type (id, subject_type_id,study_stage_id,name,deleted)
+    values (#{id,jdbcType=INTEGER},#{subjectTypeId,jdbcType=VARCHAR},#{studyStageId,jdbcType=VARCHAR}
+    , #{name,jdbcType=VARCHAR},#{deleted,jdbcType=VARCHAR})
+  </insert>
+    <insert id="insertSelective" parameterType="com.alvis.exam.domain.SubjectType">
+        insert into t_subject_type
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="name != null">
+                name,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="name != null">
+                #{name,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.alvis.exam.domain.SubjectType">
+        update t_subject_type
+        <set>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <!--修改它的状态,达到删除-->
+    <update id="updateByPrimaryKey" parameterType="com.alvis.exam.domain.SubjectType">
+        update t_subject_type
+        <set>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="deleted != null">
+                deleted = #{deleted,jdbcType=BIT}
+            </if>
+        </set>
+        where subject_type_id = #{subjectTypeId,jdbcType=VARCHAR}
+    </update>
+
+    <!--修改学科-->
+    <update id="updateSubjectType">
+         update t_subject_type
+          set name = #{name,jdbcType=VARCHAR}
+          where subject_type_id = #{subjectTypeId,jdbcType=VARCHAR}
+    </update>
+</mapper>

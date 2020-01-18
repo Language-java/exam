@@ -1,0 +1,16 @@
+spring:
+  redis:
+    host: 192.168.80.134
+    password: 123456
+  datasource:
+    url: jdbc:mysql://localhost:3306/exam?useSSL=false&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf-8
+    username: abc
+    password: abcd
+
+system:
+  fdfs-ngix: http://101.132.110.182:8888
+
+
+  tracker-list:
+    - 101.132.110.182:22122
+

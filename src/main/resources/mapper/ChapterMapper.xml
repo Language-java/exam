@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.alvis.exam.repository.ChapterMapper">
+    <resultMap id="BaseResultMap" type="com.alvis.exam.domain.Chapter">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="chapter_id" jdbcType="VARCHAR" property="chapterId"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="study_stage_id" jdbcType="VARCHAR" property="studyStageId"/>
+        <result column="subject_type_id" jdbcType="VARCHAR" property="subjectTypeId"/>
+        <result column="parent_id" jdbcType="VARCHAR" property="parentId"/>
+
+        <association property="subjectType" columnPrefix="st_" javaType="com.alvis.exam.domain.SubjectType">
+            <id property="subjectTypeId" column="subject_type_id"/>
+            <result property="name" column="name"/>
+        </association>
+        <association property="studyStage" columnPrefix="ss_" javaType="com.alvis.exam.domain.StudyStage">
+            <id property="studyStageId" column="study_stage_id"/>
+            <result property="studyStageName" column="study_stage_name"/>
+        </association>
+    </resultMap>
+    <sql id="Base_Column_List">
+      id, chapter_id, name, study_stage_id, subject_type_id, parent_id
+    </sql>
+
+    <!--查询所有层级列表,返回所有数据,前端渲染,简单查询-->
+    <select id="selectChapterList" resultMap="BaseResultMap" parameterType="com.alvis.exam.viewmodel.admin.textbook.TextBookPageRequestVM">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM t_chapter
+        <where>
+            <if test="subjectTypeId != null ">
+                and subject_type_id= #{subjectTypeId}
+            </if>
+            <if test="studyStageId != null ">
+                and study_stage_id= #{studyStageId}
+            </if>
+            <if test="parentId !=null ">
+                and parent_id= #{parentId}
+            </if>
+            <if test="chapterId !=null ">
+                and chapter_id= #{chapterId}
+            </if>
+        </where>
+    </select>
+
+    <!--并联查询学科和学段,分页-->
+    <select id="page" resultMap="BaseResultMap" parameterType="com.alvis.exam.viewmodel.admin.textbook.TextBookPageRequestVM">
+        SELECT
+        c.id,c.subject_type_id, c.chapter_id,c.name,c.study_stage_id,c.parent_id,
+        st.subject_type_id st_subject_type_id,st.name st_name,
+        ss.study_stage_id ss_study_stage_id,ss.study_stage_name ss_study_stage_name
+        FROM t_chapter c LEFT JOIN t_subject_type st
+        ON c.subject_type_id = st.subject_type_id
+        LEFT JOIN t_study_stage ss
+        ON c.study_stage_id = ss.study_stage_id
+        <where>
+            <if test="subjectTypeId != null ">
+                and subject_type_id= #{subjectTypeId}
+            </if>
+            <if test="studyStageId != null ">
+                and study_stage_id= #{studyStageId}
+            </if>
+        </where>
+    </select>
+
+
+    <!--使用递归的方法遍历查询所有父节点-->
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="com.alvis.exam.viewmodel.admin.textbook.TextBookPageRequestVM">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM t_chapter
+        <where>
+            and parent_id is NULL
+            <if test="subjectTypeId != null ">
+                and subject_type_id= #{subjectTypeId}
+            </if>
+            <if test="studyStageId != null ">
+                and study_stage_id= #{studyStageId}
+            </if>
+        </where>
+    </select>
+
+    <!--使用递归的方法遍历查询子集-->
+    <select id="findChildren" parameterType="com.alvis.exam.viewmodel.admin.textbook.TextBookPageRequestVM" resultMap="BaseResultMap">
+        select chapter_id,name,parent_id
+        from t_chapter
+        <where>
+            and parent_id = #{chapterId}
+        </where>
+    </select>
+
+    <select id="selectByPrimaryChapterId" resultMap="BaseResultMap" parameterType="java.lang.String">
+        select id chapter_id,name,parent_id
+        from t_chapter
+        <where>
+            and chapter_id = #{chapterId}
+        </where>
+    </select>
+
+    <select id="selectListParentId" resultType="com.alvis.exam.domain.Chapter" resultMap="BaseResultMap">
+        select id chapter_id,name,parent_id
+        from t_chapter
+        <where>
+            <if test="chapterId != null ">
+                and chapter_id = #{chapterId}
+            </if>
+        </where>
+    </select>
+
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_chapter
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+
+
+    <!--递归批量删除-->
+    <delete id="deleteByIds" parameterType="java.lang.Object">
+        DELETE FROM t_chapter WHERE `chapter_id` in
+        <foreach collection="list" item="deleteIds" index="index" open="(" separator="," close=")">
+            #{deleteIds}
+        </foreach>
+    </delete>
+
+
+    <insert id="insert" parameterType="com.alvis.exam.domain.Chapter">
+    insert into t_chapter (id, chapter_id, name, 
+      study_stage_id, subject_id, parent_id)
+    values (#{id,jdbcType=INTEGER}, #{chapterId,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, 
+      #{studyStageId,jdbcType=INTEGER}, #{subjectId,jdbcType=INTEGER}, #{parentId,jdbcType=VARCHAR})
+  </insert>
+    <insert id="insertSelective" parameterType="com.alvis.exam.domain.Chapter">
+        insert into t_chapter
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="chapterId != null">
+                chapter_id,
+            </if>
+            <if test="name != null">
+                name,
+            </if>
+            <if test="studyStageId != null">
+                study_stage_id,
+            </if>
+            <if test="subjectId != null">
+                subject_id,
+            </if>
+            <if test="parentId != null">
+                parent_id,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="chapterId != null">
+                #{chapterId,jdbcType=VARCHAR},
+            </if>
+            <if test="name != null">
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="studyStageId != null">
+                #{studyStageId,jdbcType=INTEGER},
+            </if>
+            <if test="subjectId != null">
+                #{subjectId,jdbcType=INTEGER},
+            </if>
+            <if test="parentId != null">
+                #{parentId,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+
+    <!--添加列表内容-->
+    <insert id="insertChapter" parameterType="com.alvis.exam.domain.Chapter" useGeneratedKeys="true" keyProperty="id">
+          insert into t_chapter (chapter_id, name, study_stage_id,subject_type_id, parent_id)
+          values (#{chapterId,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{studyStageId,jdbcType=VARCHAR},
+          #{subjectTypeId,jdbcType=VARCHAR}, #{parentId,jdbcType=VARCHAR})
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.alvis.exam.domain.Chapter">
+        update t_chapter
+        <set>
+            <if test="chapterId != null">
+                chapter_id = #{chapterId,jdbcType=VARCHAR},
+            </if>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="studyStageId != null">
+                study_stage_id = #{studyStageId,jdbcType=INTEGER},
+            </if>
+            <if test="subjectTypeId != null">
+                subject_type_id = #{subjectTypeId,jdbcType=INTEGER},
+            </if>
+            <if test="parentId != null">
+                parent_id = #{parentId,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.alvis.exam.domain.Chapter">
+    update t_chapter
+    set chapter_id = #{chapterId,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      study_stage_id = #{studyStageId,jdbcType=INTEGER},
+      subject_type_id = #{subjectTypeId,jdbcType=INTEGER},
+      parent_id = #{parentId,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+    <!--修改-->
+    <update id="updateChapter" parameterType="com.alvis.exam.domain.Chapter">
+    update t_chapter
+    set name = #{name,jdbcType=VARCHAR}
+    where chapter_id = #{chapterId,jdbcType=VARCHAR}
+</update>
+</mapper>
